@@ -1,18 +1,25 @@
-const ApiError = require('../exceptions/apiError')
+import tokenService from '../service/tokenService.js'
+import ApiError from '../exceptions/apiError.js'
 
-module.exports = function authenticateToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1]
-
-    if (!token) {
-        return ApiError.UnauthorizedError()
-    }
-
-    jwt.verify(token, process.env.JWT_ACCESS_SECRET, (err, user) => {
-        if (err) {
-            return ApiError.ForbiddenError()
+export default function authMiddleware(req, res, next) {
+    try {
+        const authorizationHeader = req.headers.authorization
+        if (!authorizationHeader) {
+            return next(ApiError.UnauthorizedError())
         }
 
-        req.user = user
+        const accessToken = req.headers['authorization']?.split(' ')[1]
+        if (!accessToken) {
+            return next(ApiError.UnauthorizedError())
+        }
+
+        const userData = tokenService.validateAccessToken(accessToken)
+        if (!userData) {
+            return next(ApiError.UnauthorizedError())
+        }
+        req.user = userData
         next()
-    })
+    } catch (e) {
+        return next(ApiError.UnauthorizedError())
+    }
 }
