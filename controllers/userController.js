@@ -9,10 +9,13 @@ export class UserController {
             const { email, password } = req.body
             const userData = await userService.login(email, password)
             res.cookie('refreshToken', userData.refreshToken, {
-                maxAge: 30 * 24 * 60 * 60 * 1000,
+                maxAge: 60 * 24 * 60 * 60 * 1000,
                 httpOnly: true,
             })
-            return res.json(userData)
+            return res.json({
+                success: true,
+                data: userData,
+            })
         } catch (e) {
             next(e)
         }
@@ -82,9 +85,7 @@ export class UserController {
 
             return res.json({
                 success: true,
-                data: {
-                    userData,
-                },
+                data: userData,
             })
         } catch (e) {
             next(e)
@@ -94,7 +95,10 @@ export class UserController {
     async getUsers(req, res, next) {
         try {
             const users = await userService.getAllUsers()
-            return res.json(users)
+            return res.json({
+                success: true,
+                data: users,
+            })
         } catch (e) {
             next(e)
         }
