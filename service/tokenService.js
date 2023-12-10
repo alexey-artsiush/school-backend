@@ -1,5 +1,7 @@
-import { Token } from '../models/index.js'
 import jwt from 'jsonwebtoken'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 class TokenService {
     generateTokens(payload) {
@@ -16,21 +18,30 @@ class TokenService {
     }
 
     async saveToken(userId, refreshToken) {
-        const tokenData = await Token.findOne({ userId })
+        let tokenData = await prisma.token.findFirst({ where: { userId } })
+
         if (tokenData) {
-            tokenData.refreshToken = refreshToken
-            return tokenData.save()
+            tokenData = await prisma.token.update({
+                where: { id: tokenData.id },
+                data: { refreshToken },
+            })
+        } else {
+            tokenData = await prisma.token.create({
+                data: {
+                    userId,
+                    refreshToken,
+                },
+            })
         }
-        const newToken = await Token.create({
-            userId,
-            refreshToken: refreshToken,
-        })
-        return newToken
+
+        return tokenData
     }
 
     async removeToken(refreshToken) {
-        const tokenData = await Token.destroy({ where: { refreshToken } })
-        return tokenData
+        const deletedToken = await prisma.token.delete({
+            where: { refreshToken },
+        })
+        return deletedToken
     }
 
     validateAccessToken(token) {
@@ -50,8 +61,11 @@ class TokenService {
             return null
         }
     }
+
     async findToken(refreshToken) {
-        const tokenData = await Token.findOne({ where: { refreshToken } })
+        const tokenData = await prisma.token.findFirst({
+            where: { refreshToken },
+        })
         return tokenData
     }
 }
