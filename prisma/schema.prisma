@@ -28,3 +28,10 @@ model Token {
   user         User     @relation(fields: [userId], references: [id])
 }
 
+model Course {
+  id    Int  @id @default(autoincrement())
+  link  String
+  name  String
+}
+
+

@@ -6,6 +6,8 @@ import cors from 'cors'
 import errorMiddleware from './middleware/errorHandlingMiddleware.js'
 import router from './routes/index.js'
 import { PrismaClient } from '@prisma/client'
+import { fileURLToPath } from 'url'
+import { join, dirname } from 'path'
 
 dotenv.config()
 const prisma = new PrismaClient()
@@ -13,10 +15,13 @@ const app = express()
 const PORT = process.env.PORT || 5000
 const server = http.createServer(app)
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 app.use(cors({ credentials: true, origin: process.env.CLIENT_URL }))
 app.use(express.json())
 app.use(cookieParser())
-app.use(express.static(new URL('static', import.meta.url).pathname))
+app.use(express.static(join(__dirname, 'static')))
 app.use('/api', router)
 app.use(errorMiddleware)
 
